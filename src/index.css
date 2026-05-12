@@ -1,91 +1,39 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Add this to your global CSS or within a style tag */
-.sticky-header {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: white;
+@layer base {
+  * {
+    @apply m-0 p-0 box-border;
+  }
+  body {
+    @apply font-outfit text-gray-900 bg-black antialiased overflow-x-hidden;
+  }
 }
 
-.sticky-thead {
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    background: #f9fafb;
-    /* bg-gray-50 */
-}
+@layer components {
+  .btn-modern {
+    @apply px-8 py-3 rounded-full font-semibold transition-all duration-500 flex items-center gap-2;
+  }
+  
+  .glass-effect {
+    @apply bg-white/70 backdrop-blur-xl border border-white/30;
+  }
 
-.horizontal-scroll-container {
-    position: relative;
-}
+  .text-gradient-red {
+    @apply bg-gradient-to-r from-red-900 to-[#c00000] bg-clip-text text-transparent;
+  }
 
-.scroll-button {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid #e5e7eb;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 30;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease;
-}
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 
-.scroll-button:hover {
-    background: white;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.scroll-button-left {
-    left: 10px;
-}
-
-.scroll-button-right {
-    right: 10px;
-}
-
-.scroll-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.gradient-bg {
-    color: rgb(238, 104, 227);
-}
-
-@keyframes slideInRight {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-.animate-slideInRight {
-    animation: slideInRight 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0
-    }
-
-    to {
-        opacity: 1
-    }
-}
-
-.animate-fadeIn {
-    animation: fadeIn 0.2s ease-out;
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }

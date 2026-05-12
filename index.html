@@ -1,19 +1,59 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="logo.jpg" />
+  <link rel="icon" type="image/png" href="/logo3.jpg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SRMPL Dashboard</title>
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <title>Sarthak TMT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+  <!-- Tailwind Play CDN as a foolproof fallback -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              red: '#800000',
+              gold: '#D4AF37',
+            },
+          },
+          fontFamily: {
+            outfit: ['Outfit', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style type="text/css">
+    body {
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .btn-modern {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 2rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      transition: all 0.5s;
+    }
+
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+  </style>
 </head>
 
 <body>
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
 </body>
-
 
 </html>

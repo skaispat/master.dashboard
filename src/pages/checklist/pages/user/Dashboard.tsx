@@ -1,0 +1,677 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { Link } from "react-router-dom"
+import { LayoutDashboard, CheckCircle2, Clock, AlertTriangle, ArrowRight, ListTodo, FileBarChart, Loader2, Search, X, ChevronLeft, ChevronRight, Users, PieChart as PieChartIcon } from 'lucide-react'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts"
+import AdminLayout from "../../components/layout/AdminLayout"
+import { supabase } from "../../supabase"
+
+
+const UserDashboard = () => {
+    const [taskView, setTaskView] = useState("upcoming")
+    const [statModal, setStatModal] = useState<{ isOpen: boolean; type: string | null; title: string }>({
+        isOpen: false,
+        type: null,
+        title: ""
+    })
+
+    // Data State
+    const [tasks, setTasks] = useState<any[]>([])
+    const [user, setUser] = useState<any>(null)
+    const [loading, setLoading] = useState(true)
+    const [stats, setStats] = useState({
+        total: 0,
+        completed: 0,
+        pending: 0,
+        overdue: 0,
+        completionRate: 0
+    })
+
+    useEffect(() => {
+        fetchDashboardData()
+    }, [])
+
+    const fetchDashboardData = async () => {
+        try {
+            setLoading(true)
+            const username = sessionStorage.getItem("username")
+            if (!username) return
+
+            // 1. Get User Details
+            const { data: userData, error: userError } = await supabase
+                .from("users")
+                .select("*")
+                .eq("username", username)
+                .single()
+
+            if (userError) throw userError
+            setUser(userData)
+
+            // 2. Get Tasks for this user
+            // 2. Get Tasks for this user (with chunking for large datasets)
+            let tasksData: any[] = [];
+            let from = 0;
+            const chunkSize = 1000;
+            let fetching = true;
+
+            while (fetching) {
+                const { data, error } = await supabase
+                    .from("master_tasks")
+                    .select("*")
+                    .eq("name", userData.full_name)
+                    .order("task_start_date", { ascending: true })
+                    .range(from, from + chunkSize - 1)
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    tasksData = [...tasksData, ...data];
+                    from += chunkSize;
+                    if (data.length < chunkSize) fetching = false;
+                } else {
+                    fetching = false;
+                }
+            }
+
+            // 3. Calculate Stats & Process Tasks
+            const today = new Date()
+            today.setHours(0, 0, 0, 0)
+
+            const processedTasks = tasksData.map(t => {
+                const isCompleted = t.status === "Yes"
+                const taskDate = t.task_start_date ? new Date(t.task_start_date) : null
+                let derivedStatus = 'pending'
+
+                if (isCompleted) {
+                    derivedStatus = 'completed'
+                } else if (taskDate) {
+                    const d = new Date(taskDate)
+                    d.setHours(0, 0, 0, 0)
+                    if (d < today) derivedStatus = 'overdue'
+                }
+
+                return {
+                    ...t,
+                    title: t.task_title,
+                    displayDate: t.task_start_date ? new Date(t.task_start_date).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric"
+                    }) : "N/A",
+                    derivedStatus,
+                    frequency: t.freq
+                }
+            })
+
+            const todayStr = new Date().toLocaleDateString('en-CA')
+
+            // Filter tasks to only include those till today for stats
+            const tasksTillToday = processedTasks.filter(t => t.task_start_date && t.task_start_date.substring(0, 10) <= todayStr)
+
+            const total = tasksTillToday.length
+            const completed = tasksTillToday.filter(t => t.derivedStatus === 'completed').length
+            const overdue = tasksTillToday.filter(t => t.derivedStatus === 'overdue').length
+            // Pending is strictly today's pending
+            const pending = tasksTillToday.filter(t => t.task_start_date && t.task_start_date.substring(0, 10) === todayStr && t.derivedStatus === 'pending').length
+
+            const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0
+
+            setStats({
+                total,
+                completed,
+                pending,
+                overdue,
+                completionRate
+            })
+
+            setTasks(processedTasks)
+
+        } catch (error) {
+            console.error("Error fetching dashboard data:", error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const getFilteredTasks = (view: string) => {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+
+        // Sorting helper
+        const sortByDate = (a: any, b: any) => new Date(a.task_start_date).getTime() - new Date(b.task_start_date).getTime()
+
+
+
+        if (view === "upcoming") {
+            return tasks
+                .filter(t => {
+                    const dueDate = new Date(t.task_start_date)
+                    dueDate.setHours(0, 0, 0, 0)
+                    return t.status !== "Yes" && dueDate >= today
+                })
+                .sort(sortByDate)
+                .slice(0, 5)
+        }
+
+        if (view === "overdue") {
+            return tasks
+                .filter(t => {
+                    const dueDate = new Date(t.task_start_date)
+                    dueDate.setHours(0, 0, 0, 0)
+                    return t.status !== "Yes" && dueDate < today
+                })
+                .sort(sortByDate)
+        }
+
+        return tasks.slice(0, 5)
+    }
+
+    const formatDate = (dateString: string) => {
+        if (!dateString) return "N/A"
+        return new Date(dateString).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        })
+    }
+
+    if (loading) {
+        return (
+            <AdminLayout>
+                <div className="flex h-[80vh] items-center justify-center">
+                    <Loader2 className="h-10 w-10 animate-spin text-[#991B1B]" />
+                </div>
+            </AdminLayout>
+        )
+    }
+
+    return (
+        <AdminLayout>
+            <div className="space-y-6 md:space-y-8 p-3 md:p-0 animate-in fade-in duration-500">
+                {/* Header Section */}
+                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center border-b border-gray-100 pb-4 md:pb-6">
+                    <div className="space-y-1">
+                        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+                            My Dashboard
+                        </h1>
+                        <p className="text-sm text-gray-500">
+                            Welcome back, {user?.full_name?.split(' ')[0] || 'User'}! Here's your task overview.
+                        </p>
+                    </div>
+                    <Link
+                        to="/checklist/dashboard/user/tasks"
+                        className="group inline-flex items-center gap-2 rounded-lg bg-red-600 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-sm transition-all hover:bg-red-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2"
+                    >
+                        View All Tasks
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Link>
+                </div>
+
+                {/* Stats and Graph Section - Optimized Breakpoints */}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 md:gap-8">
+                    {/* Left: Stats Cards (2 columns, 2 rows) */}
+                    <div className="grid grid-cols-2 gap-4 md:gap-6 h-fit">
+                        <StatCard
+                            title="Total Tasks"
+                            value={stats.total}
+                            description="Assigned to you"
+                            icon={<ListTodo />}
+                            accentColor="blue"
+                            onClick={() => setStatModal({ isOpen: true, type: 'all', title: 'Total Tasks' })}
+                        />
+                        <StatCard
+                            title="Completed"
+                            value={stats.completed}
+                            description={`${stats.completionRate}% completion rate`}
+                            icon={<CheckCircle2 />}
+                            accentColor="green"
+                            onClick={() => setStatModal({ isOpen: true, type: 'completed', title: 'Completed Tasks' })}
+                        />
+                        <StatCard
+                            title="Pending"
+                            value={stats.pending}
+                            description="Tasks to be completed"
+                            icon={<Clock />}
+                            accentColor="amber"
+                            onClick={() => setStatModal({ isOpen: true, type: 'pending', title: 'Pending Tasks' })}
+                        />
+                        <StatCard
+                            title="Overdue"
+                            value={stats.overdue}
+                            description="Requires immediate attention"
+                            icon={<AlertTriangle />}
+                            accentColor="red"
+                            alert={true}
+                            onClick={() => setStatModal({ isOpen: true, type: 'overdue', title: 'Overdue Tasks' })}
+                        />
+                    </div>
+
+                    {/* Right: Status Distribution Graph with Percentages */}
+                    <div className="rounded-[2.5rem] border border-gray-100 bg-white p-6 shadow-sm hover:shadow-md transition-all h-full">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-gray-900 tracking-tight uppercase">Status Distribution</h3>
+                            <PieChartIcon className="h-5 w-5 text-gray-300" />
+                        </div>
+
+                        <div className="flex flex-col lg:flex-row items-center justify-between gap-4 lg:gap-6 min-h-[200px] lg:h-[220px]">
+                            <div className="relative w-full h-[200px] lg:h-full lg:w-1/2 flex items-center justify-center">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={[
+                                                { name: "Completed", value: stats.completed, color: "#22c55e" },
+                                                { name: "Pending", value: stats.pending, color: "#facc15" },
+                                                { name: "Overdue", value: stats.overdue, color: "#ef4444" }
+                                            ]}
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={65}
+                                            outerRadius={85}
+                                            paddingAngle={8}
+                                            dataKey="value"
+                                        >
+                                            {[
+                                                { name: "Completed", color: "#22c55e" },
+                                                { name: "Pending", color: "#facc15" },
+                                                { name: "Overdue", color: "#ef4444" }
+                                            ].map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip
+                                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                        />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                    <span className="text-[10px] font-bold text-gray-500 uppercase">Done</span>
+                                    <span className="text-xl font-bold text-gray-900">{stats.completionRate}%</span>
+                                </div>
+                            </div>
+
+                            {/* Custom Legend with Percentages - Responsive Width */}
+                            <div className="w-full lg:w-1/2 flex flex-col gap-3">
+                                {[
+                                    { label: "DONE", value: stats.completed, color: "bg-green-500", raw: stats.completed },
+                                    { label: "PENDING", value: stats.pending, color: "bg-amber-400", raw: stats.pending },
+                                    { label: "OVERDUE", value: stats.overdue, color: "bg-red-500", raw: stats.overdue }
+                                ].map((item, idx) => {
+                                    const percentage = stats.total > 0 ? ((item.raw / stats.total) * 100).toFixed(2) : "0.00";
+                                    return (
+                                        <div key={idx} className="flex items-center justify-between p-3 rounded-[1.2rem] border border-gray-50 bg-white shadow-sm transition-all hover:border-gray-200">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`h-2.5 w-2.5 rounded-full ${item.color} shadow-sm`} />
+                                                <span className="text-[11px] font-black text-gray-700 tracking-wider font-mono">{item.label}</span>
+                                            </div>
+                                            <span className="text-[11px] font-black text-gray-900 font-mono">{percentage}%</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Main Content Area */}
+                <div className="grid grid-cols-1 gap-8">
+                    {/* Full Width Row for Task Navigation & List */}
+                    <div className="space-y-6">
+                        <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+                            <div className="bg-[#FEF2F2]/30 p-1 border-b border-gray-100">
+                                <div className="grid grid-cols-2 gap-1">
+                                    <ViewTabButton
+                                        active={taskView === "upcoming"}
+                                        onClick={() => setTaskView("upcoming")}
+                                        label="Upcoming"
+                                    />
+                                    <ViewTabButton
+                                        active={taskView === "overdue"}
+                                        onClick={() => setTaskView("overdue")}
+                                        label="Overdue"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="p-4 md:p-6">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h3 className="text-lg font-semibold text-gray-900">
+                                        {taskView === "upcoming" && "Upcoming Tasks"}
+                                        {taskView === "overdue" && "Overdue Tasks"}
+                                    </h3>
+                                </div>
+
+                                <div className="space-y-3">
+                                    {getFilteredTasks(taskView).length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                                            <div className="rounded-full bg-gray-50 p-3 mb-3">
+                                                <ListTodo className="h-6 w-6 text-gray-400" />
+                                            </div>
+                                            <p className="text-sm text-gray-500">
+                                                {taskView === 'overdue' ? 'No overdue tasks! Great job.' : 'No tasks found.'}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        getFilteredTasks(taskView).map((task) => (
+                                            <div
+                                                key={task.task_id}
+                                                className="group relative flex items-start gap-3 md:gap-4 rounded-lg border border-gray-100 bg-white p-3 md:p-4 transition-all hover:bg-[#FEF2F2]/30 hover:shadow-sm hover:border-[#991B1B]/20"
+                                            >
+
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <span
+                                                            className={`truncate text-sm font-medium ${task.status === "Yes"
+                                                                ? "text-gray-400 line-through"
+                                                                : "text-gray-900 group-hover:text-[#991B1B]"
+                                                                }`}
+                                                        >
+                                                            {task.task_title}
+                                                        </span>
+                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getFrequencyStyle(task.freq)}`}>
+                                                            {task.freq}
+                                                        </span>
+                                                    </div>
+
+                                                    <p className="mt-1 text-sm text-gray-500 line-clamp-1">
+                                                        {task.task_description}
+                                                    </p>
+
+                                                    <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
+                                                        <span className="flex items-center gap-1">
+                                                            <Clock className="h-3 w-3" />
+                                                            Due: {formatDate(task.task_start_date)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            {/* Stat Tasks Modal */}
+            {statModal.isOpen && (
+                <StatTasksModal
+                    isOpen={statModal.isOpen}
+                    onClose={() => setStatModal({ ...statModal, isOpen: false })}
+                    title={statModal.title}
+                    tasks={tasks.filter(t => {
+                        const todayStr = new Date().toLocaleDateString('en-CA');
+                        const isTillToday = t.task_start_date && t.task_start_date.substring(0, 10) <= todayStr;
+                        const isToday = t.task_start_date && t.task_start_date.substring(0, 10) === todayStr;
+
+                        if (statModal.type === 'all') return isTillToday;
+                        if (statModal.type === 'pending') return isToday && t.derivedStatus === 'pending';
+
+                        // For overdue and completed, we already filter by status, 
+                        // but we must also ensure they are from the "till today" set
+                        return isTillToday && t.derivedStatus === statModal.type;
+                    })}
+                />
+            )}
+        </AdminLayout>
+    )
+}
+
+// Helper for frequency styles
+const getFrequencyStyle = (frequency: string) => {
+    switch (frequency) {
+        case "daily": return "bg-blue-50 text-blue-700"
+        case "weekly": return "bg-purple-50 text-purple-700"
+        case "monthly": return "bg-orange-50 text-orange-700"
+        default: return "bg-gray-100 text-gray-700"
+    }
+}
+
+// Reusing StatCard from AdminDashboard for consistency
+const StatCard = ({ title, value, description, icon, accentColor = "gray", alert = false, onClick }: any) => {
+    const colorKey = alert ? "red" : accentColor;
+
+    const colorStyles = {
+        blue: { border: "border-red-200", icon: "text-red-600", bg: "bg-red-50", shadow: "hover:shadow-red-200/50" },
+        green: { border: "border-green-200", icon: "text-green-600", bg: "bg-green-50", shadow: "hover:shadow-green-200/50" },
+        amber: { border: "border-amber-200", icon: "text-amber-600", bg: "bg-amber-50", shadow: "hover:shadow-amber-200/50" },
+        red: { border: "border-red-300", icon: "text-red-800", bg: "bg-red-50/80", shadow: "hover:shadow-red-900/10" },
+        gray: { border: "border-gray-200", icon: "text-gray-500", bg: "bg-gray-50", shadow: "hover:shadow-gray-200/50" }
+    }
+
+    const style = colorStyles[colorKey as keyof typeof colorStyles] || colorStyles.gray
+
+    return (
+        <div
+            onClick={onClick}
+            className={`group relative overflow-hidden rounded-[2rem] border ${style.border} p-5 transition-all hover:shadow-xl cursor-pointer ${style.bg} hover:-translate-y-1 active:scale-95 shadow-sm ${style.shadow}`}
+        >
+            {/* Clean Corner Icon (No background box) */}
+            <div className={`absolute top-4 right-4 sm:top-5 sm:right-5 ${style.icon} flex items-center justify-center transition-transform group-hover:scale-125 duration-300`}>
+                {icon && <div className="h-5 w-5 sm:h-6 sm:w-6">{icon}</div>}
+            </div>
+
+            <div className="flex flex-col relative h-full">
+                <div>
+                    <h3 className={`text-[11px] font-bold uppercase tracking-widest opacity-70 ${style.icon} mb-1 pr-12`}>
+                        {title}
+                    </h3>
+                    <div className="flex items-baseline gap-2">
+                        <span className={`text-3xl font-black tracking-tight text-gray-900 group-hover:scale-105 transition-transform origin-left duration-300`}>
+                            {value}
+                        </span>
+                    </div>
+                </div>
+                <p className={`mt-auto text-[10px] font-medium text-gray-400 uppercase tracking-tight pt-1`}>{description}</p>
+            </div>
+        </div>
+    )
+}
+
+const ViewTabButton = ({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) => (
+    <button
+        onClick={onClick}
+        className={`rounded-md py-2 text-sm font-black uppercase tracking-widest transition-all ${active
+            ? "bg-red-600 text-white shadow-md shadow-red-900/20"
+            : "text-gray-500 hover:bg-red-50 hover:text-red-700"
+            }`}
+    >
+        {label}
+    </button>
+)
+
+const StatTasksModal = ({ isOpen, onClose, title, tasks }: { isOpen: boolean; onClose: () => void; title: string; tasks: any[] }) => {
+    const [currentPage, setCurrentPage] = useState(1);
+    const [searchQuery, setSearchQuery] = useState("");
+    const itemsPerPage = 10;
+
+    // Reset filters and page when modal opens or title changes
+    useEffect(() => {
+        if (isOpen) {
+            setCurrentPage(1);
+            setSearchQuery("");
+        }
+    }, [isOpen, title]);
+
+    // Filter tasks
+    const filteredTasks = tasks.filter((task: any) => {
+        const matchesSearch = (task.title || "").toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesSearch;
+    });
+
+    const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const currentTasks = filteredTasks.slice(startIndex, startIndex + itemsPerPage);
+
+    // Reset page if filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery]);
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200">
+                <div className="p-6 border-b border-gray-100 bg-gray-50/50 rounded-t-xl space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+                            <p className="text-sm text-gray-500 mt-1">{filteredTasks.length} tasks found</p>
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className="p-2 hover:bg-white hover:shadow-sm rounded-full transition-all text-gray-500 hover:text-gray-900"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row gap-3">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Search tasks..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full rounded-lg border-gray-200 pl-9 pr-4 py-2 text-sm focus:border-[#991B1B] focus:ring-[#991B1B]"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                    {filteredTasks.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-12 text-center text-gray-500">
+                            <div className="rounded-full bg-gray-50 p-4 mb-3">
+                                <ListTodo className="h-8 w-8 text-gray-400" />
+                            </div>
+                            <p className="font-medium">No tasks found</p>
+                            <p className="text-sm">Try adjustment your search.</p>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Desktop Table View */}
+                            <div className="hidden md:block border border-gray-100 rounded-lg overflow-hidden">
+                                <table className="min-w-full divide-y divide-gray-100">
+                                    <thead className="bg-gray-50/50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Task Title</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Assigned To</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Due Date</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Frequency</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-100">
+                                        {currentTasks.map((task: any) => (
+                                            <tr key={task.id} className="hover:bg-gray-50/50 transition-colors">
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize 
+                                                    ${task.derivedStatus === 'completed' ? 'bg-green-100 text-green-800' :
+                                                            task.derivedStatus === 'overdue' ? 'bg-red-100 text-red-800' :
+                                                                'bg-amber-100 text-amber-800'}`}>
+                                                        {task.derivedStatus}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="text-sm font-medium text-gray-900 line-clamp-2" title={task.title}>
+                                                        {task.title}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm text-gray-600">{task.name || 'You'}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm text-gray-600 font-mono">{task.displayDate}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
+                                                        {task.frequency}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Mobile Card View */}
+                            <div className="md:hidden space-y-4">
+                                {currentTasks.map((task: any) => (
+                                    <div key={task.id} className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm space-y-3">
+                                        <div className="flex justify-between items-start gap-4">
+                                            <div className="space-y-1">
+                                                <div className="text-sm font-semibold text-gray-900 line-clamp-2">
+                                                    {task.title}
+                                                </div>
+                                                <div className="text-xs text-gray-500">
+                                                    Due: {task.displayDate}
+                                                </div>
+                                            </div>
+                                            <span className={`shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium capitalize 
+                                                ${task.derivedStatus === 'completed' ? 'bg-green-100 text-green-800' :
+                                                    task.derivedStatus === 'overdue' ? 'bg-red-100 text-red-800' :
+                                                        'bg-amber-100 text-amber-800'}`}>
+                                                {task.derivedStatus}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-center justify-between pt-3 border-t border-gray-50 mt-2">
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] text-gray-400 uppercase tracking-wider">Assigned To</span>
+                                                <span className="text-xs font-medium text-gray-700">{task.name || 'You'}</span>
+                                            </div>
+                                            <span className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
+                                                {task.frequency}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </div>
+
+                <div className="p-4 border-t border-gray-100 bg-gray-50/50 rounded-b-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="text-sm text-gray-500">
+                        Showing {filteredTasks.length > 0 ? startIndex + 1 : 0} to {Math.min(startIndex + itemsPerPage, filteredTasks.length)} of {filteredTasks.length} tasks
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center mr-4 gap-1">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="p-1 rounded-md hover:bg-white border border-transparent hover:border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            >
+                                <ChevronLeft className="h-5 w-5 text-gray-600" />
+                            </button>
+                            <span className="text-sm font-medium text-gray-700 min-w-[3rem] text-center">
+                                {currentPage} / {totalPages || 1}
+                            </span>
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages || totalPages === 0}
+                                className="p-1 rounded-md hover:bg-white border border-transparent hover:border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            >
+                                <ChevronRight className="h-5 w-5 text-gray-600" />
+                            </button>
+                        </div>
+
+                        <button
+                            onClick={onClose}
+                            className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+export default UserDashboard
