@@ -103,18 +103,18 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
             <X size={20} strokeWidth={3} />
           </button>
         )}
-        <div className="flex flex-col gap-1.5">
-          {/* <img
+        {/* <div className="flex flex-col gap-1.5">
+          <img
             src="/SKALogoEnglishBlack.svg"
             alt="SKA Logo"
             className="h-10 w-auto object-contain self-start"
-          /> */}
+          />
           <div>
             <h1 className="font-bold text-[14px] tracking-wider text-gray-900 uppercase">
               Document & Subscriptions.
             </h1>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Navigation */}

@@ -7,9 +7,9 @@ const Facebook = (props) => (
   </svg>
 );
 
-const Twitter = (props) => (
+const Instagram = (props) => (
   <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
   </svg>
 );
 
@@ -46,14 +46,16 @@ const Footer = () => {
             <h4 className="text-primary-gold font-black uppercase tracking-widest text-[10px] mb-6">Connect With Us</h4>
             <div className="flex gap-4">
               {[
-                { Icon: Facebook, color: 'hover:text-[#1877F2] hover:border-[#1877F2]/50 hover:bg-[#1877F2]/10' },
-                { Icon: Twitter, color: 'hover:text-[#1DA1F2] hover:border-[#1DA1F2]/50 hover:bg-[#1DA1F2]/10' },
-                { Icon: Linkedin, color: 'hover:text-[#0A66C2] hover:border-[#0A66C2]/50 hover:bg-[#0A66C2]/10' },
-                { Icon: Youtube, color: 'hover:text-[#FF0000] hover:border-[#FF0000]/50 hover:bg-[#FF0000]/10' }
-              ].map(({ Icon, color }, i) => (
+                { Icon: Facebook, url: 'https://www.facebook.com/share/1DsrZyfzWB/', color: 'hover:text-[#1877F2] hover:border-[#1877F2]/50 hover:bg-[#1877F2]/10' },
+                { Icon: Instagram, url: 'https://www.instagram.com/sarthak.tmt?igsh=MXV6cXN5NXBwOXlu', color: 'hover:text-[#1DA1F2] hover:border-[#1DA1F2]/50 hover:bg-[#1DA1F2]/10' },
+                { Icon: Linkedin, url: 'https://www.linkedin.com/company/sarthaktmtsk', color: 'hover:text-[#0A66C2] hover:border-[#0A66C2]/50 hover:bg-[#0A66C2]/10' },
+                { Icon: Youtube, url: 'https://www.youtube.com/@sarthaktmtcg', color: 'hover:text-[#FF0000] hover:border-[#FF0000]/50 hover:bg-[#FF0000]/10' }
+              ].map(({ Icon, url, color }, i) => (
                 <a
                   key={i}
-                  href="#"
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className={`w-10 h-10 md:w-11 md:h-11 rounded-xl border border-white/10 flex items-center justify-center transition-all duration-500 ${color}`}
                 >
                   <Icon className="w-5 h-5 md:w-5.5 md:h-5.5" />
@@ -67,13 +69,13 @@ const Footer = () => {
         <div className="pt-12 border-t border-white/10">
           <div className="flex flex-wrap justify-center md:justify-between gap-8 text-gray-400 font-bold text-sm tracking-wider">
             <span className="flex items-center gap-3 hover:text-white transition-colors cursor-default">
-              <MapPin size={16} className="text-primary-red" /> Industrial Area Phase 2,Siltara, Raipur(CG)
+              <MapPin size={22} className="text-primary-red flex-shrink-0" /> Plot No. 1,2,3,11,12 CSIIDC GROWTH CENTRE, Industrial Area Siltara Phase-2, Raipur (CG)- 493221.
             </span>
             <span className="flex items-center gap-3 hover:text-white transition-colors cursor-default">
-              <Phone size={16} className="text-primary-red" /> +91 98765 43210
+              <Phone size={20} className="text-primary-red flex-shrink-0" /> +91 98765 43210
             </span>
             <span className="flex items-center gap-3 hover:text-white transition-colors cursor-default">
-              <Mail size={16} className="text-primary-red" /> sales@skaispat.com
+              <Mail size={20} className="text-primary-red flex-shrink-0" /> sales@skaispat.com
             </span>
           </div>
         </div>

@@ -63,7 +63,7 @@ const RootProtectedRoute = ({ children }) => {
     }
 
     if (!user) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/" replace />;
     }
 
     return children;
@@ -184,16 +184,12 @@ import MainLayout from "./components/MainLayout"
 function AppRoutes() {
     return (
         <Routes>
-            {/* --- Auth Route --- */}
-            <Route path="/login" element={<LoginPageMain />} />
-
-            {/* --- Protected Routes --- */}
-            <Route path="/" element={<RootProtectedRoute><MainLayout /></RootProtectedRoute>}>
-                {/* --- Main Landing Page --- */}
+            {/* --- Public Landing Page --- */}
+            <Route path="/" element={<MainLayout />}>
                 <Route index element={<Home />} />
 
-                {/* --- Checklist Module --- */}
-                <Route path="checklist">
+                {/* --- Protected Checklist Module --- */}
+                <Route path="checklist" element={<RootProtectedRoute><Outlet /></RootProtectedRoute>}>
                     <Route index element={<ChecklistDashboardRedirect />} />
                     <Route path="dashboard" element={<ChecklistDashboardRedirect />} />
                     
@@ -238,8 +234,8 @@ function AppRoutes() {
                     <Route path="dashboard/mill-gate-pass" element={<ChecklistProtectedRoute requiredPermission="dashboard"><MillGatePass /></ChecklistProtectedRoute>} />
                 </Route>
 
-                {/* --- Document Module --- */}
-                <Route path="documents">
+                {/* --- Protected Document Module --- */}
+                <Route path="documents" element={<RootProtectedRoute><Outlet /></RootProtectedRoute>}>
                     <Route index element={<Navigate to="app" replace />} />
                     
                     <Route path="app" element={
