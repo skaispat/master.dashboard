@@ -93,29 +93,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
 
   return (
     <div className="flex flex-col h-full bg-white text-gray-800 border-r border-gray-100 font-sans">
-      {/* Header */}
-      <div className="relative flex justify-between items-center px-6 pt-6 pb-6 border-b border-gray-100 flex-shrink-0">
-        {onClose && (
+      {/* Mobile Close Button */}
+      {onClose && (
+        <div className="flex justify-end p-2 lg:hidden flex-shrink-0">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 lg:hidden text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
           >
             <X size={20} strokeWidth={3} />
           </button>
-        )}
-        {/* <div className="flex flex-col gap-1.5">
-          <img
-            src="/SKALogoEnglishBlack.svg"
-            alt="SKA Logo"
-            className="h-10 w-auto object-contain self-start"
-          />
-          <div>
-            <h1 className="font-bold text-[14px] tracking-wider text-gray-900 uppercase">
-              Document & Subscriptions.
-            </h1>
-          </div>
-        </div> */}
-      </div>
+        </div>
+      )}
 
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto py-6 px-4 no-scrollbar">
@@ -123,14 +111,29 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       </div>
 
       {/* Footer / Logout */}
-      <div className="p-4 border-t border-gray-100 mt-auto flex-shrink-0">
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 w-full px-4 py-2 rounded-lg text-gray-400 hover:bg-gray-50 hover:text-red-600 transition-all font-bold uppercase tracking-wider text-xs"
-        >
-          <LogOut size={18} />
-          <span>Sign Out</span>
-        </button>
+      <div className="p-4 border-t border-gray-100">
+        <div className="flex items-center justify-between p-3 rounded-xl hover:bg-red-50 transition-all group">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-red-600 flex items-center justify-center text-white shadow-lg shadow-red-900/20">
+              <span className="text-sm font-black">{currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}</span>
+            </div>
+            <div className="overflow-hidden">
+              <p className="text-sm font-bold text-gray-900 truncate w-24">
+                {currentUser?.name || "User"}
+              </p>
+              <p className="text-[10px] text-red-600 font-black uppercase tracking-widest">
+                {currentUser?.role === "admin" ? "Admin" : "Member"}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="text-gray-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-100/50 transition-all opacity-0 group-hover:opacity-100"
+            title="Logout"
+          >
+            <LogOut className="h-5 w-5" />
+          </button>
+        </div>
       </div>
     </div>
   );

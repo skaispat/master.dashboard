@@ -68,7 +68,7 @@ export default function Sidebar({
                                     <div>
                                         <button
                                             onClick={() => setIsDataSubmenuOpen(!isDataSubmenuOpen)}
-                                            className={`flex w-full items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-bold uppercase tracking-wider transition-all duration-200 ${route.active
+                                            className={`flex w-full items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-200 ${route.active
                                                 ? "bg-red-600 text-white shadow-md"
                                                 : "text-gray-600 hover:text-red-600 hover:bg-red-50"
                                                 }`}
@@ -85,7 +85,7 @@ export default function Sidebar({
                                                     <li key={category.id}>
                                                         <Link
                                                             to={category.link || `/dashboard/data/${category.id}`}
-                                                            className={`flex items-center gap-3 rounded-lg px-4 py-2 text-sm font-bold uppercase tracking-wider transition-colors ${location.pathname === (category.link || `/dashboard/data/${category.id}`)
+                                                            className={`flex items-center gap-3 rounded-lg px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${location.pathname === (category.link || `/dashboard/data/${category.id}`)
                                                                 ? "text-red-700 bg-red-50"
                                                                 : "text-gray-500 hover:text-red-600 hover:bg-red-50/50"
                                                                 }`}
@@ -100,7 +100,7 @@ export default function Sidebar({
                                 ) : (
                                     <Link
                                         to={route.href}
-                                        className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all duration-200 ${route.active
+                                        className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-200 ${route.active
                                             ? "bg-red-600 text-white shadow-md shadow-red-900/10"
                                             : "text-gray-600 hover:text-red-600 hover:bg-red-50"
                                             }`}
@@ -159,7 +159,7 @@ export default function Sidebar({
                                             <div>
                                                 <button
                                                     onClick={() => setIsDataSubmenuOpen(!isDataSubmenuOpen)}
-                                                    className={`flex w-full items-center justify-between gap-3 rounded-lg px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all ${route.active
+                                                    className={`flex w-full items-center justify-between gap-3 rounded-lg px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all ${route.active
                                                         ? "bg-red-600 text-white shadow-lg shadow-red-900/20"
                                                         : "text-gray-600 hover:text-red-600 hover:bg-red-50"
                                                         }`}
@@ -174,9 +174,9 @@ export default function Sidebar({
                                                     <ul className="mt-2 ml-4 space-y-1.5 border-l-2 border-red-50 pl-4">
                                                         {visibleDepartments.map((category) => (
                                                             <li key={category.id}>
-                                                                 <Link
+                                                                <Link
                                                                     to={category.link || `/dashboard/data/${category.id}`}
-                                                                    className={`flex items-center gap-3 rounded-lg px-4 py-2 text-sm font-bold uppercase tracking-wider transition-colors ${location.pathname === (category.link || `/dashboard/data/${category.id}`)
+                                                                    className={`flex items-center gap-3 rounded-lg px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${location.pathname === (category.link || `/dashboard/data/${category.id}`)
                                                                         ? "text-red-600 bg-red-50"
                                                                         : "text-gray-500 hover:text-red-600 hover:bg-red-50/50"
                                                                         }`}
@@ -192,7 +192,7 @@ export default function Sidebar({
                                         ) : (
                                             <Link
                                                 to={route.href}
-                                                className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all ${route.active
+                                                className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all ${route.active
                                                     ? "bg-red-600 text-white shadow-lg shadow-red-900/20"
                                                     : "text-gray-600 hover:text-red-600 hover:bg-red-50"
                                                     }`}

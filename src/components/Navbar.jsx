@@ -56,6 +56,7 @@ const Navbar = () => {
   const navLinks = user ? [
     { name: 'Checklist', href: '/checklist' },
     { name: 'Documents', href: '/documents' },
+    { name: 'Retail', href: '/retail' },
   ] : [];
 
   const isActive = (href) => {

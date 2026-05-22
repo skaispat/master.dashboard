@@ -1,12 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
+import { AuthContext as RetailAuthContext } from '../App';
 import { Eye, EyeOff, Lock, User, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
-const LoginPage = ({ isModal = false }) => {
-  const { login } = useAuth();
+const LoginPage = ({ isModal = false, isRetail = false }) => {
+  const mainAuth = useAuth();
+  const retailAuth = useContext(RetailAuthContext);
+  
+  // Use retail login if isRetail is true, otherwise use main login
+  const { login } = isRetail ? retailAuth : mainAuth;
+  
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -39,8 +45,8 @@ const LoginPage = ({ isModal = false }) => {
       const result = await login(formData.username, formData.password);
       if (result.success) {
         toast.success('Welcome back!');
-        // Direct navigate to checklist after login
-        navigate('/checklist');
+        // Direct navigate to retail or checklist after login
+        navigate(isRetail ? '/retail' : '/checklist');
       } else {
         toast.error(result.error || 'Login failed. Please check your credentials.');
       }
