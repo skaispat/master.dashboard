@@ -201,7 +201,7 @@ export default MonthlySales;
 
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -441,4 +441,4 @@ function MonthlySales({ filteredData, FMS_COLUMNS_INFO }) {
   );
 }
 
-export default MonthlySales;
+export default React.memo(MonthlySales);

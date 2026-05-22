@@ -1,61 +1,64 @@
-import { useState, useEffect, createContext } from "react"
-import DashboardRetail from "./pages/retail/pages/Dashboard";
-import DealerFormRetail from "./pages/retail/pages/DealerForm";
-import HistoryRetail from "./pages/retail/pages/History";
-import TrackerRetail from "./pages/retail/pages/Tracker";
-import ReportsRetail from "./pages/retail/pages/Reports";
-
-import AttendanceRetail from "./pages/retail/pages/Attendents";
-import SidebarRetail from "./pages/retail/components/Sidebaar";
-import DailyReportRetail from "./pages/retail/pages/Dailyreport";
-import AdminLogsRetail from "./pages/retail/pages/AdminLogs";
-import UserManagementRetail from "./pages/retail/pages/UserManagement";
-import supabaseRetail from "./pages/retail/SupaabseClient";
-import AttendanceHistoryPageRetail from "./pages/retail/pages/AttendanceHistoryPage";
+import { useState, useEffect, createContext, lazy, Suspense } from "react"
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, Outlet } from "react-router-dom"
 import { Toaster } from "react-hot-toast"
 import { supabase } from "./pages/document/lib/supabase"
 import { AuthProvider, useAuth } from "./Auth/AuthContext"
 import LoginPageMain from "./Auth/LoginPage"
+import SidebarRetail from "./pages/retail/components/Sidebaar";
+import supabaseRetail from "./pages/retail/SupaabseClient";
+import MainLayout from "./components/MainLayout"
+import ErrorBoundary from "./components/ErrorBoundary"
 
-// --- Landing Page ---
-import Home from "./pages/Home"
+// --- Lazy Load Pages ---
+const Home = lazy(() => import("./pages/Home"))
 
-// --- Checklist Module Imports ---
-import AdminDashboard from "./pages/checklist/pages/admin/Dashboard"
-import AdminAssignTask from "./pages/checklist/pages/admin/AssignTask"
-import AdminApproval from "./pages/checklist/pages/admin/AdminApproval"
-import License from "./pages/checklist/pages/License"
-import TrainingVideo from "./pages/checklist/pages/TrainingVideo"
-import SettingsChecklist from "./pages/checklist/pages/admin/Settings"
-import Profile from "./pages/checklist/pages/admin/Profile"
-import DelegatedTask from "./pages/checklist/pages/user/DelegatedTask"
-import UserDashboard from "./pages/checklist/pages/user/Dashboard"
-import UserTasks from "./pages/checklist/pages/user/Tasks"
-import CalendarPage from "./pages/checklist/pages/CalendarPage"
-import MillGatePass from "./pages/checklist/pages/MillGatePass"
+// Retail
+const DashboardRetail = lazy(() => import("./pages/retail/pages/Dashboard"));
+const DealerFormRetail = lazy(() => import("./pages/retail/pages/DealerForm"));
+const HistoryRetail = lazy(() => import("./pages/retail/pages/History"));
+const TrackerRetail = lazy(() => import("./pages/retail/pages/Tracker"));
+const ReportsRetail = lazy(() => import("./pages/retail/pages/Reports"));
+const AttendanceRetail = lazy(() => import("./pages/retail/pages/Attendents"));
+const DailyReportRetail = lazy(() => import("./pages/retail/pages/Dailyreport"));
+const AdminLogsRetail = lazy(() => import("./pages/retail/pages/AdminLogs"));
+const UserManagementRetail = lazy(() => import("./pages/retail/pages/UserManagement"));
+const AttendanceHistoryPageRetail = lazy(() => import("./pages/retail/pages/AttendanceHistoryPage"));
 
-import HouseKeepingData from "./pages/checklist/components/data/HouseKeepingData"
-import StoreData from "./pages/checklist/components/data/StoreData"
-import AccountData from "./pages/checklist/components/data/AccountData"
-import AdminData from "./pages/checklist/components/data/AdminData"
-import SecurityData from "./pages/checklist/components/data/SecurityData"
-import SlagCrusherData from "./pages/checklist/components/data/SlagCrusherData"
-import HRData from "./pages/checklist/components/data/HRData"
-import MGMTData from "./pages/checklist/components/data/MGMTData"
-import HealthAndSafetyData from "./pages/checklist/components/data/HealthAndSafetyData"
+// Checklist
+const AdminDashboard = lazy(() => import("./pages/checklist/pages/admin/Dashboard"))
+const AdminAssignTask = lazy(() => import("./pages/checklist/pages/admin/AssignTask"))
+const AdminApproval = lazy(() => import("./pages/checklist/pages/admin/AdminApproval"))
+const License = lazy(() => import("./pages/checklist/pages/License"))
+const TrainingVideo = lazy(() => import("./pages/checklist/pages/TrainingVideo"))
+const SettingsChecklist = lazy(() => import("./pages/checklist/pages/admin/Settings"))
+const Profile = lazy(() => import("./pages/checklist/pages/admin/Profile"))
+const DelegatedTask = lazy(() => import("./pages/checklist/pages/user/DelegatedTask"))
+const UserDashboard = lazy(() => import("./pages/checklist/pages/user/Dashboard"))
+const UserTasks = lazy(() => import("./pages/checklist/pages/user/Tasks"))
+const CalendarPage = lazy(() => import("./pages/checklist/pages/CalendarPage"))
+const MillGatePass = lazy(() => import("./pages/checklist/pages/MillGatePass"))
 
-// --- Document Module Imports ---
-import Layout from "./pages/document/components/Layout"
-import DashboardDocument from "./pages/document/pages/Dashboard"
+const HouseKeepingData = lazy(() => import("./pages/checklist/components/data/HouseKeepingData"))
+const StoreData = lazy(() => import("./pages/checklist/components/data/StoreData"))
+const AccountData = lazy(() => import("./pages/checklist/components/data/AccountData"))
+const AdminData = lazy(() => import("./pages/checklist/components/data/AdminData"))
+const SecurityData = lazy(() => import("./pages/checklist/components/data/SecurityData"))
+const SlagCrusherData = lazy(() => import("./pages/checklist/components/data/SlagCrusherData"))
+const HRData = lazy(() => import("./pages/checklist/components/data/HRData"))
+const MGMTData = lazy(() => import("./pages/checklist/components/data/MGMTData"))
+const HealthAndSafetyData = lazy(() => import("./pages/checklist/components/data/HealthAndSafetyData"))
+
+// Document
+const Layout = lazy(() => import("./pages/document/components/Layout"))
+const DashboardDocument = lazy(() => import("./pages/document/pages/Dashboard"))
 import ProtectedRouteDocument from "./pages/document/components/ProtectedRoute"
-import SettingsDocument from "./pages/document/pages/Settings"
-import RenewalsManager from "./pages/document/pages/renewals/RenewalsManager"
-import DocumentsManager from "./pages/document/pages/document/DocumentsManager"
-import DocumentRenewal from "./pages/document/pages/document/Renewal"
-import AllSubscriptions from "./pages/document/pages/subscription/AllSubscriptions"
-import SubscriptionApproval from "./pages/document/pages/subscription/Approval"
-import SubscriptionPayment from "./pages/document/pages/subscription/Payment"
+const SettingsDocument = lazy(() => import("./pages/document/pages/Settings"))
+const RenewalsManager = lazy(() => import("./pages/document/pages/renewals/RenewalsManager"))
+const DocumentsManager = lazy(() => import("./pages/document/pages/document/DocumentsManager"))
+const DocumentRenewal = lazy(() => import("./pages/document/pages/document/Renewal"))
+const AllSubscriptions = lazy(() => import("./pages/document/pages/subscription/AllSubscriptions"))
+const SubscriptionApproval = lazy(() => import("./pages/document/pages/subscription/Approval"))
+const SubscriptionPayment = lazy(() => import("./pages/document/pages/subscription/Payment"))
 
 // ==========================================
 // GLOBAL AUTH PROTECTION
@@ -188,7 +191,7 @@ const ChecklistProtectedRoute = ({ children, allowedRoles = [], requiredPermissi
   return children
 }
 
-import MainLayout from "./components/MainLayout"
+
 
 // ==========================================
 // MAIN APP COMPONENT
@@ -286,14 +289,27 @@ function AppRoutes() {
   );
 }
 
+const FallbackLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="flex flex-col items-center gap-4">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+      <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Loading...</p>
+    </div>
+  </div>
+);
+
 function App() {
   return (
-    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <AuthProvider>
-        <Toaster position="top-right" />
-        <AppRoutes />
-      </AuthProvider>
-    </Router>
+    <ErrorBoundary>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <AuthProvider>
+          <Toaster position="top-right" />
+          <Suspense fallback={<FallbackLoader />}>
+            <AppRoutes />
+          </Suspense>
+        </AuthProvider>
+      </Router>
+    </ErrorBoundary>
   )
 }
 

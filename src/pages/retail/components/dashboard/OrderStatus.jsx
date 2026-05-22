@@ -131,7 +131,7 @@ export default OrderStatus;
 
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   PieChart,
   Pie,
@@ -265,4 +265,4 @@ function OrderStatus({ filteredData, FMS_COLUMNS_INFO }) {
   );
 }
 
-export default OrderStatus;
+export default React.memo(OrderStatus);
