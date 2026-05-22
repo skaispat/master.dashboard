@@ -16,7 +16,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        globIgnores: ['**/stats.html']
       }
     }),
     visualizer({
@@ -28,12 +29,24 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['antd', '@radix-ui/react-dropdown-menu', 'lucide-react', 'framer-motion'],
-          charts: ['recharts'],
-          utils: ['moment', 'date-fns', 'jspdf', 'xlsx'],
-          supabase: ['@supabase/supabase-js']
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+              return 'vendor';
+            }
+            if (id.includes('antd') || id.includes('@radix-ui') || id.includes('lucide-react') || id.includes('framer-motion')) {
+              return 'ui';
+            }
+            if (id.includes('recharts')) {
+              return 'charts';
+            }
+            if (id.includes('moment') || id.includes('date-fns') || id.includes('jspdf') || id.includes('xlsx')) {
+              return 'utils';
+            }
+            if (id.includes('@supabase')) {
+              return 'supabase';
+            }
+          }
         }
       }
     }
