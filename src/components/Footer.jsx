@@ -69,7 +69,7 @@ const Footer = () => {
         <div className="pt-12 border-t border-white/10">
           <div className="flex flex-wrap justify-center md:justify-between gap-8 text-gray-400 font-bold text-sm tracking-wider">
             <span className="flex items-center gap-3 hover:text-white transition-colors cursor-default">
-              <MapPin size={22} className="text-primary-red flex-shrink-0" /> Plot No. 1,2,3,11,12 CSIIDC GROWTH CENTRE, Industrial Area Siltara Phase-2, Raipur (CG)- 493221.
+              <MapPin size={22} className="text-primary-red flex-shrink-0" /> Plot No. 1,2,3,11,12 CSIDC GROWTH CENTRE, Industrial Area Siltara Phase-2, Raipur (CG)- 493221.
             </span>
             <span className="flex items-center gap-3 hover:text-white transition-colors cursor-default">
               <Phone size={20} className="text-primary-red flex-shrink-0" /> +91 98765 43210
